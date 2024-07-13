@@ -1,0 +1,53 @@
+version: '3.9'
+services:
+    mysql:
+        image: mysql:8.4
+        container_name: mysql
+        environment:
+            MYSQL_ROOT_USER: root
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: test
+        ports:
+            - 13306:3306
+        volumes:
+            - mysqldata:/var/lib/mysql
+        networks:
+            - myapp
+
+    postgres:
+        image: postgres:13
+        container_name: postgres
+        environment:
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: root
+            POSTGRES_DB: go_base
+        ports:
+            - 15432:5432
+        volumes:
+            - postgresdata:/var/lib/postgresql/data
+        networks:
+            - myapp
+
+    redis:
+        image: redis:7.2
+        container_name: redis
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+        ports:
+            - 16379:6379
+        volumes:
+            - redisdata:/data
+        networks:
+            - myapp
+
+volumes:
+    mysqldata:
+        driver: local
+    postgresdata:
+        driver: local
+    redisdata:
+        driver: local
+
+networks:
+    myapp:
+        driver: bridge
