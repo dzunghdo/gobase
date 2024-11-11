@@ -5,7 +5,7 @@ import "flag"
 // AppInfo flags
 var (
 	AppName = *flag.String("APP_NAME", "go_base", "App name")
-	Port    = *flag.String("PORT", "10000", "App port")
+	Port    = *flag.String("PORT", "8888", "App port")
 	Env     = *flag.String("ENV", "dev", "Environment")
 )
 
@@ -22,6 +22,10 @@ var (
 var (
 	RedisHost = *flag.String("REDIS_HOST", "localhost", "Redis host")
 	RedisPort = *flag.String("REDIS_PORT", "16379", "Redis port")
+)
+
+var (
+	MaxWebsocketConn = *flag.Int("MAX_WS_CONN", 1000, "Max number of ws connections")
 )
 
 // Security flags

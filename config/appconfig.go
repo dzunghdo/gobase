@@ -3,12 +3,13 @@ package config
 import "gobase/config/flags"
 
 type AppConfig struct {
-	App      AppInfo
-	Security SecurityConf
-	MySQL    MySQLConf
-	MongoDB  MongoDBConf
-	Redis    RedisConf
-	Datadog  DataDogConf
+	App       AppInfo
+	Security  SecurityConf
+	MySQL     MySQLConf
+	MongoDB   MongoDBConf
+	Redis     RedisConf
+	Datadog   DataDogConf
+	Websocket WebSocketConf
 }
 
 var appConfig AppConfig
@@ -17,6 +18,10 @@ type AppInfo struct {
 	Name string
 	Port string
 	Env  string
+}
+
+type WebSocketConf struct {
+	MaxWSConn int
 }
 
 type SecurityConf struct {
@@ -54,6 +59,9 @@ func LoadConfig() {
 		},
 		Datadog: DataDogConf{
 			DDAPIKey: flags.DDAPIKey,
+		},
+		Websocket: WebSocketConf{
+			MaxWSConn: flags.MaxWebsocketConn,
 		},
 	}
 }

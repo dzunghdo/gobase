@@ -1,15 +1,16 @@
 package main
 
 import (
+	"gobase/ws"
 	"os"
-
-	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 
 	"gobase/config"
 	"gobase/controllers/middlewares"
 	"gobase/controllers/routes"
 	"gobase/db"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -23,6 +24,7 @@ func main() {
 
 	db.GetRedisConnector().Connect()
 
+	startWSServer()
 	registerRoutes()
 }
 
@@ -33,6 +35,9 @@ func registerRoutes() {
 
 	apiRouter := router.Group("/api")
 	routes.HandleBaseRoutes(apiRouter)
+
+	ws := ws.GetWSServer()
+	apiRouter.GET("/ws", ws.HandleConnection) // no auth
 
 	v1 := apiRouter.Group("/v1")
 	v1.Use(middlewares.ResponseMiddleware)
@@ -50,9 +55,13 @@ func registerRoutes() {
 func initLoggerAndTracer() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 
 	log.WithFields(log.Fields{"string": "foo", "int": 1, "float": 1.1}).
 		Info("My first event from golang to stdout")
+}
 
+func startWSServer() {
+	ws := ws.GetWSServer()
+	go ws.Start()
 }
