@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -59,11 +60,6 @@ func (ws *WSServer) Start() {
 			ws.mu.Lock()
 			delete(ws.clients, clientAddr)
 			ws.mu.Unlock()
-
-			//log.Info(fmt.Sprintf("Unregistered client %v", clientAddr))
-			if len(ws.clients) == 0 {
-				log.Info("Unregister all clients")
-			}
 		}
 	}
 }
@@ -81,7 +77,7 @@ func (ws *WSServer) HandleConnection(c *gin.Context) {
 	// Limit the maximum number of connections
 	if len(ws.clients) >= MaxWSConn {
 		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many connections"})
-		fmt.Println("Max ws connections reached.")
+		log.Println("Max ws connections reached.")
 		return
 	}
 
@@ -92,6 +88,19 @@ func (ws *WSServer) HandleConnection(c *gin.Context) {
 		return
 	}
 	ws.register <- conn
+}
+
+func (ws *WSServer) CloseConnection(clientID string) error {
+	conn, hasConn := ws.clients[clientID]
+	if !hasConn {
+		return nil
+	}
+	err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Server closed connection."))
+	if err != nil {
+		log.Errorf("Fail to close ws connection, error: %v", err)
+	}
+	ws.unregister <- conn
+	return nil
 }
 
 func (ws *WSServer) handleMessage(conn *websocket.Conn) {
@@ -110,4 +119,17 @@ func (ws *WSServer) handleMessage(conn *websocket.Conn) {
 		}
 		count++
 	}
+}
+
+func (ws *WSServer) sendMessage(clientID string, data []byte) error {
+	conn, hasConn := ws.clients[clientID]
+	if !hasConn {
+		return errors.New("WS connection not found")
+	}
+	err := conn.WriteMessage(websocket.TextMessage, data)
+	if err != nil {
+		log.Errorf("Error when sending message to ws: %v", err)
+		return err
+	}
+	return nil
 }
